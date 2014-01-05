@@ -1,4 +1,4 @@
-<?php   
+<?php
 /* 
 Plugin Name: IndiePub Current Location
 Plugin URI: http://independentpublisher.me/plugins/indiepub-current-location/
@@ -6,18 +6,18 @@ Description: Plugin for recording and showing your current location in WordPress
 Author: Raam Dev
 Version: 1.0 
 Author URI: http://raamdev.com/
-*/  
+*/
 
 /**
- * Admin functions 
+ * Admin functions
  */
-function ncl_admin() {  
+function ncl_admin() {
     include('indiepub-current-location-admin-page.php');
 }
 
-function ncl_admin_actions() {  
+function ncl_admin_actions() {
     add_options_page("Current Location Settings", "Current Location", 'manage_options', 'ncl_options', "ncl_admin");
-}  
+}
 add_action('admin_menu', 'ncl_admin_actions');
 
 function ncl_load_meta_boxes() {
@@ -32,13 +32,13 @@ add_action('admin_menu', 'ncl_load_meta_boxes');
  */
 
 // Add settings link on plugin page
-function ncl_plugin_settings_link($links) { 
-  $settings_link = '<a href="options-general.php?page=ncl_options">Settings</a>'; 
-  array_unshift($links, $settings_link); 
-  return $links; 
+function ncl_plugin_settings_link($links) {
+  $settings_link = '<a href="options-general.php?page=ncl_options">Settings</a>';
+  array_unshift($links, $settings_link);
+  return $links;
 }
- 
-$plugin = plugin_basename(__FILE__); 
+
+$plugin = plugin_basename(__FILE__);
 add_filter("plugin_action_links_$plugin", 'ncl_plugin_settings_link' );
 
 
@@ -60,7 +60,7 @@ function ncl_show_location ($atts) {
 
 	// Extract Shortcode Parameters/Attributes
     extract( shortcode_atts( array( 'display' => NULL, 'wikify' => NULL ), $atts ) );
-	
+
 	if ($display == 'coordinates') {
 		$return_text = get_option('ncl_coords');
 	} else if ($display == 'text') {
@@ -74,33 +74,59 @@ function ncl_show_location ($atts) {
 			$return_text = date(DATE_RFC822, get_option('ncl_updated_date'));
 		}
 	} else {
-		$return_text = get_option('ncl_text'); 
+		$return_text = get_option('ncl_text');
 	}
 	if ($wikify == 'true') {
 		if ("" != trim(get_option('ncl_wiki_url'))) {
 			$return_text = '<a href="' . get_option('ncl_wiki_url') . '" target="_new">' . stripslashes($return_text) . '</a>';
 		}
 	}
-		
+
 	return $return_text;
 }
 add_shortcode('ncl-current-location', 'ncl_show_location');
 
 /**
+ * Returns location information supplied by Nomad Current Location plugin
+ */
+function get_ncl_location( $prefix = "" ) {
+
+	$location = get_post_meta( get_the_ID(), 'ncl_current_location', TRUE );
+
+	if ( trim( $location ) != "" ) {
+		return $location_html = $prefix . '<span class="mapThis" place="' . $location . '" zoom="2">' . $location . '</span>';
+	}
+	else {
+		return $location_html = '';
+	}
+}
+
+/**
+ * Prints HTML with current location, if available
+ */
+function indiepub_show_current_location_html() {
+	if( get_ncl_location() !== '') {
+		echo '<h2 class="site-published-location">' . get_ncl_location() . '</h2>';
+	}
+}
+// Adds support for the Independent Publisher theme
+add_action( 'independent_publisher_after_post_published_date', 'indiepub_show_current_location_html', 10, 1 );
+
+/**
  * Remote API for updating Current Location from external scripts
  */
 if (isset($_GET['ncl_api_key'])) {
-	
+
 	$updated = FALSE;
 	$ncl_api_key = get_option('ncl_api_key');
 	$ncl_api_enable = get_option('ncl_api_enable');
-	
+
 	// Check if the Remote API has been enabled
 	if ($ncl_api_enable != "1") {
 		echo "Remote API is Disabled.";
 		exit;
 	}
-	
+
 	// Make sure the API key is valid
 	if (trim($ncl_api_key) == "" || $ncl_api_key != $_GET['ncl_api_key']) {
 		echo "Invalid API Key.";
@@ -155,7 +181,7 @@ if (isset($_GET['ncl_api_key'])) {
 			if($ncl_updated_date) { $updated_text = $updated_text . " (" . date(DATE_RFC822, $ncl_updated_date) . ")"; }
 			echo trim($updated_text);
 		}
-		
+
 		exit;
 	}
 }
