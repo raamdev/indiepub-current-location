@@ -55,6 +55,15 @@ function mapThis_js() {
 
 add_action( 'wp_enqueue_scripts', 'mapThis_js' );
 
+/**
+ * Register stylesheet
+ */
+function indiepub_current_location_scripts() {
+	wp_enqueue_style( 'indiepub-current-location', plugins_url( '/style.css', __FILE__ ), array(), '1.0' );
+}
+
+add_action( 'wp_enqueue_scripts', 'indiepub_current_location_scripts' );
+
 
 /**
  * Shortcode for displaying current location in posts/pages
